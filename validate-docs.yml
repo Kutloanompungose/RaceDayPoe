@@ -1,1 +1,63 @@
+ Validate Repository Structure
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  validate-docs:
+    name: Check /docs folder and required Part 1 files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check /docs folder exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error::The /docs folder is missing from the repository root."
+            exit 1
+          fi
+          echo "/docs folder found."
+
+      - name: Check ERD image exists (PNG or PDF)
+        run: |
+          if ls docs/*.png docs/*.pdf > /dev/null 2>&1; then
+            echo "ERD image found: $(ls docs/*.png docs/*.pdf 2>/dev/null)"
+          else
+            echo "::error::No ERD image (.png or .pdf) found in /docs."
+            exit 1
+          fi
+
+      - name: Check API endpoint plan document exists
+        run: |
+          if ls docs/*.md docs/*.docx docs/*.pdf > /dev/null 2>&1; then
+            echo "Endpoint plan document found: $(ls docs/*.md docs/*.docx docs/*.pdf 2>/dev/null)"
+          else
+            echo "::error::No endpoint plan document (.md, .docx, or .pdf) found in /docs."
+            exit 1
+          fi
+
+      - name: Check SQL script exists
+        run: |
+          if ls docs/*.sql > /dev/null 2>&1; then
+            echo "SQL script found: $(ls docs/*.sql)"
+          else
+            echo "::error::No SQL script (.sql) found in /docs."
+            exit 1
+          fi
+
+      - name: Check README exists at repository root
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "::error::README.md is missing from the repository root."
+            exit 1
+          fi
+          echo "README.md found."
+
+      - name: Summary
+        run: echo " Repository structure meets Part 1 requirements."
 
