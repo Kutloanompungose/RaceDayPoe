@@ -1,7 +1,6 @@
 /* ============================================================
    RaceDay - Database Schema and Seed Data
-   Target: SQL Server (SSMS)
-   Matches the ERD in /docs/RaceDay_ERD.png
+
    ============================================================ */
 
 IF DB_ID('RaceDayDB') IS NULL
