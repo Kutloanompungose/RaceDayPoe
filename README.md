@@ -14,7 +14,6 @@ RaceDay is an event management system for South African road running, walking an
 7. [Swagger](#swagger)
 8. [Unit tests](#unit-tests)
 9. [CI/CD](#cicd)
-10. [Demo video](#demo-video)
 
 ---
 
