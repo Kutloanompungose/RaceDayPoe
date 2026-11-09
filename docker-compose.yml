@@ -1,0 +1,53 @@
+# Runs the WHOLE RaceDay platform with one command:   docker compose up --build
+#   Web (MVC)  -> http://localhost:8080
+#   API+Swagger-> http://localhost:5100/swagger
+#   Azurite    -> local stand-in for Azure Blob Storage (images are stored here)
+#   SQL Server -> database (data kept in the "sqldata" volume)
+#
+# For REAL Azure Blob Storage, set AZURE_STORAGE_CONNECTION_STRING in a .env file (see README)
+# and remove AzureBlob__PublicBaseUrl.
+
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "RaceDay_Passw0rd"
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --location /data --skipApiVersionCheck --loose
+    ports:
+      - "10000:10000"
+    volumes:
+      - blobdata:/data
+
+  api:
+    build: ./RaceDay.Api
+    depends_on:
+      - sql
+      - azurite
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sql,1433;Database=RaceDayDB;User Id=sa;Password=RaceDay_Passw0rd;TrustServerCertificate=True"
+      Jwt__Key: "docker-compose-dev-key-change-me-at-least-32-characters-long"
+      Database__AutoCreate: "true"
+      AzureBlob__ConnectionString: "${AZURE_STORAGE_CONNECTION_STRING:-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;}"
+      AzureBlob__PublicBaseUrl: "${AZURE_BLOB_PUBLIC_BASE_URL-http://localhost:10000/devstoreaccount1}"
+      AzureBlob__ContainerName: "raceday-images"
+    ports:
+      - "5100:8080"
+
+  web:
+    build: ./RaceDay.Web
+    depends_on:
+      - api
+    environment:
+      Api__BaseUrl: "http://api:8080/"
+    ports:
+      - "8080:8080"
+
+volumes:
+  sqldata:
+  blobdata:
